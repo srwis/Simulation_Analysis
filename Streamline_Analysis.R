@@ -5,13 +5,6 @@
 # so if you don't have any in one cat it might throw an error
 #further investigation needed
 
-setwd("~/Google Drive/Muse/2-4-2016/Files for 2-24/")
-srv = read.delim(file="C:/Users/srwisots/Drive/Muse/2-4-2016/Files for 2-24/srv-final.txt", header=TRUE,sep="\t",as.is = T);
-attach(srv)
-
-setwd("C:/Users/srwisots/Drive/Muse/Simulation for SRv/large.nex Sim/results")
-test1 = read.delim(file="test1.txt", header = TRUE, sep = "\t", as.is = T)
-test2 = read.delim(file="test2.txt", header = TRUE, sep = "\t", as.is = T)
 
 ###process data
 # function that adds significant categories based on p values
@@ -493,35 +486,10 @@ gen.pairs.plots <- function(dat, log = TRUE, name){
     dev.off()
   }
 }
-
+#this function needs work
 do.it.all <- function(dat, name){
   dat = process.dat(dat)
   x = box.sum.stats(dat)
   gen.boxplots(dat, box.stats = x)
 }
 
-#checking Bias
-plot(test1.process$BUSTED.omega3.MLE,test1.process$BUSTED.SRV.omega3.MLE
-)
-plot(test1.process$SRV.alpha3.MLE,
-     ylim = c(0, 6.66))
-abline(h= 6.66)
-points(test1.process$SRV.alpha2.MLE, col = 2)
-abline(h= 0.66, col = 2)
-points(test1.process$SRV.alpha1.MLE, col = 3)
-abline(h=0.133, col =3)
-
-plot(test1.process$BUSTED.omega3.MLE)
-abline(h=1)
-plot(test1.process$BUSTED.omega2.MLE,col = 2)
-abline(h = .5, col =2)
-plot(test1.process$BUSTED.omega1.MLE,col = 3)
-abline(h = .1, col =3)
-
-
-plot(test1.process$BUSTED.SRV.omega3.MLE)
-abline(h=1)
-plot(test1.process$BUSTED.SRV.omega2.MLE,col = 2)
-abline(h = .5, col =2)
-plot(test1.process$BUSTED.SRV.omega1.MLE,col = 3)
-abline(h = .1, col =3)
