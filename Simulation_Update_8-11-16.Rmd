@@ -1,0 +1,366 @@
+---
+title: "Simulation Update 8-11-16"
+author: "Sadie Wisotsky"
+date: "August 11, 2016"
+output: html_document
+---
+
+
+
+```{r Compile Function, echo=FALSE}
+#creates list of json files
+#pulls info out from jsons into data.frame
+#for easier manipulation in R
+library(jsonlite)
+library(ggplot2)
+compile <- function(cur.dir){
+  jsons <- list.files(path = cur.dir,
+                      pattern = '*.json')
+  
+  #create empty data.frame with variable names
+  names = c("FILE", "BUSTED.LR", "BUSTED.SRV.LR", "BUSTED.omega3.MLE", "BUSTED.SRV.omega3.MLE", "BUSTED.omega3.prop",
+            "BUSTED.SRV.omega3.prop", 'CV.SRV', 'BUSTED.P', 'BUSTED.SRV.P','BUSTED.AICc','BUSTED.SRV.AICc',
+            'BUSTED.treelength' ,'BUSTED.SRV.treelength', 'Sites', 'Sequences', 
+            'BUSTED.omega1.MLE','BUSTED.SRV.omega1.MLE', 'BUSTED.omega1.prop','BUSTED.SRV.omega1.prop',
+            'BUSTED.omega2.MLE','BUSTED.SRV.omega2.MLE', 'BUSTED.omega2.prop','BUSTED.SRV.omega2.prop', 'SRV.alpha3.MLE',
+            'SRV.alpha3.prop','SRV.alpha1.MLE','SRV.alpha1.prop','SRV.alpha2.MLE','SRV.alpha2.prop')
+  
+  classes = c("character", "numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric",
+              "numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric",
+              "numeric","numeric","numeric")
+  df =read.table(text="", col.names = names, colClasses = classes)
+  for (i in  seq(from=1, to=length(jsons), by=2)){
+    filepath = paste(cur.dir,jsons[i], sep="")
+    
+    test = fromJSON(filepath)
+    
+    
+    
+    FILE = jsons[i]
+    Sites = length(test$profiles$unconstrained)
+    tree_string = test$fits$`Unconstrained model`$`tree string`
+    Sequences = "NaN"
+    
+    if (grepl("SRV",jsons[i])){
+      filepath = paste(cur.dir,jsons[i], sep="")
+      test = fromJSON(filepath)
+      
+      CV.SRV = "NaN"
+      BUSTED.SRV.P = test$`test results`$p
+      BUSTED.SRV.LR =test$`test results`$LR
+      BUSTED.SRV.AICc = test$fits$`Unconstrained model`$`AIC-c`
+      BUSTED.SRV.treelength = test$fits$`Unconstrained model`$`tree length`
+      
+      #OMEGA values for BUSTED.SRV
+      BUSTED.SRV.omega3.MLE = test$fits$`Unconstrained model`$`rate distributions`$FG[3,1]
+      BUSTED.SRV.omega3.prop = test$fits$`Unconstrained model`$`rate distributions`$FG[3,2]
+      BUSTED.SRV.omega2.MLE = test$fits$`Unconstrained model`$`rate distributions`$FG[2,1]
+      BUSTED.SRV.omega2.prop = test$fits$`Unconstrained model`$`rate distributions`$FG[2,2]
+      BUSTED.SRV.omega1.MLE = test$fits$`Unconstrained model`$`rate distributions`$FG[1,1]
+      BUSTED.SRV.omega1.prop = test$fits$`Unconstrained model`$`rate distributions`$FG[1,2]
+      #ALPHA values for BUSTED.SRV
+      SRV.alpha3.MLE = test$fits$`Unconstrained model`$`rate distributions`$SRV[3,1]
+      SRV.alpha3.prop = test$fits$`Unconstrained model`$`rate distributions`$SRV[3,2]
+      SRV.alpha2.MLE = test$fits$`Unconstrained model`$`rate distributions`$SRV[2,1]
+      SRV.alpha2.prop = test$fits$`Unconstrained model`$`rate distributions`$SRV[2,2]
+      SRV.alpha1.MLE = test$fits$`Unconstrained model`$`rate distributions`$SRV[1,1]
+      SRV.alpha1.prop = test$fits$`Unconstrained model`$`rate distributions`$SRV[1,2]
+      
+      
+      
+    }
+    if (grepl("SRV",jsons[i+1])==FALSE){
+      filepath = paste(cur.dir,jsons[i+1], sep="")
+      
+      test = fromJSON(filepath)
+      BUSTED.P = test$`test results`$p
+      BUSTED.LR = test$`test results`$LR
+      BUSTED.AICc = test$fits$`Unconstrained model`$`AIC-c`
+      BUSTED.treelength = test$fits$`Unconstrained model`$`tree length`
+      
+      #OMEGA values for BUSTED
+      BUSTED.omega3.MLE = test$fits$`Unconstrained model`$`rate distributions`$FG[3,1]
+      BUSTED.omega3.prop = test$fits$`Unconstrained model`$`rate distributions`$FG[3,2]
+      BUSTED.omega2.MLE = test$fits$`Unconstrained model`$`rate distributions`$FG[2,1]
+      BUSTED.omega2.prop = test$fits$`Unconstrained model`$`rate distributions`$FG[2,2]
+      BUSTED.omega1.MLE = test$fits$`Unconstrained model`$`rate distributions`$FG[1,1]
+      BUSTED.omega1.prop = test$fits$`Unconstrained model`$`rate distributions`$FG[1,2]
+      #ALPHA values for BUSTED
+      #       BUSTED.alpha3.MLE = test$fits$`Unconstrained model`$`rate distributions`$SRV[3,1]
+      #       BUSTED.alpha3.prop = test$fits$`Unconstrained model`$`rate distributions`$SRV[3,2]
+      #       BUSTED.alpha2.MLE = test$fits$`Unconstrained model`$`rate distributions`$SRV[2,1]
+      #       BUSTED.alpha2.prop = test$fits$`Unconstrained model`$`rate distributions`$SRV[2,2]
+      #       BUSTED.alpha1.MLE = test$fits$`Unconstrained model`$`rate distributions`$SRV[1,1]
+      #       BUSTED.alpha1.prop = test$fits$`Unconstrained model`$`rate distributions`$SRV[1,2]
+      
+    }
+    
+    df[nrow(df)+1,] <- c(FILE, BUSTED.LR, BUSTED.SRV.LR, BUSTED.omega3.MLE, BUSTED.SRV.omega3.MLE, BUSTED.omega3.prop,
+                         BUSTED.SRV.omega3.prop, CV.SRV, BUSTED.P, BUSTED.SRV.P,BUSTED.AICc,BUSTED.SRV.AICc,
+                         BUSTED.treelength ,BUSTED.SRV.treelength, Sites, Sequences, 
+                         BUSTED.omega1.MLE,BUSTED.SRV.omega1.MLE, BUSTED.omega1.prop,BUSTED.SRV.omega1.prop,
+                         BUSTED.omega2.MLE,BUSTED.SRV.omega2.MLE, BUSTED.omega2.prop,BUSTED.SRV.omega2.prop, SRV.alpha3.MLE,
+                         SRV.alpha3.prop,SRV.alpha1.MLE,SRV.alpha1.prop,SRV.alpha2.MLE,SRV.alpha2.prop)
+    
+  }
+  df[,2:30]=as.numeric(unlist(df[,2:30]))
+    return(df)
+}
+```
+
+```{r more functions, echo = FALSE}
+#adds significant categories and normalizes alphas
+process.dat <- function(dat, redo.alphas = TRUE){
+### Add sig categories
+  dat= cbind(dat,p.cat=cut(dat$BUSTED.P,breaks=c(-Inf,0.05,Inf),
+                            labels = c("S V B", "NS V B")))
+  dat= cbind(dat,p.srv.cat=cut(dat$BUSTED.SRV.P,breaks=c(-Inf,0.05,Inf),
+                                labels = c("S V BSRV", "NS V BSRV")))
+###rearrange alphas
+  if(redo.alphas==TRUE){
+    normalize = dat$SRV.alpha1.MLE*dat$SRV.alpha1.prop + 
+                dat$SRV.alpha2.MLE*dat$SRV.alpha2.prop+ 
+                dat$SRV.alpha3.MLE*dat$SRV.alpha3.prop
+      
+    
+    dat = cbind(dat,true.alpha1 = dat$SRV.alpha1.MLE/normalize,
+            true.alpha2 = dat$SRV.alpha2.MLE/normalize,
+            true.alpha3 = dat$SRV.alpha3.MLE/normalize)
+  }
+  else{
+    #sets the true.alpha values to just the standard MLE 
+    #makes the rest of the stream line analysis easier. 
+    #it's either this or make you specify alpha variables in later steps...
+    dat = cbind(dat,true.alpha1 = dat$SRV.alpha1.MLE,
+                true.alpha2 = dat$SRV.alpha2.MLE,
+                true.alpha3 = dat$SRV.alpha3.MLE)  }
+}
+
+
+
+```
+
+
+```{r, echo=FALSE}
+library(reshape2)
+test1.dat=compile("G:/BRC/SimResults/test1/")
+test1.process.dat = process.dat(test1.dat)
+test1.melt.dat=melt(test1.process.dat[,c(1,31:35)])
+
+max.dat = compile("G:/BRC/SimResults/maxRates/")
+max.process.dat =process.dat(max.dat)
+max.melt.dat=melt(max.process.dat[,c(1,31:35)])
+
+min.dat = compile("G:/BRC/SimResults/zeroRates/")
+min.process.dat =process.dat(min.dat)
+min.melt.dat=melt(min.process.dat[,c(1,31:35)])
+
+test2.dat = compile("G:/BRC/SimResults/test2/jsons/")
+test2.process.dat = process.dat(test2.dat)
+test2.melt.dat=melt(test2.process.dat[,c(1,31:35)])
+
+test3.dat = compile("G:/BRC/SimResults/test3/")
+test3.process.dat = process.dat(test3.dat)
+test3.melt.dat=melt(test3.process.dat[,c(1,31:35)])
+
+bothSel.dat = compile("G:/BRC/SimResults/bothSel/")
+bothSel.process.dat = process.dat(bothSel.dat)
+bothSel.melt.dat = melt(bothSel.process.dat[,c(1,31:35)])
+
+BUSTEDSel.dat = compile("G:/BRC/SimResults/BUSTEDSel/")
+BUSTEDSel.process.dat = process.dat(BUSTEDSel.dat)
+BUSTEDSel.melt.dat = melt(BUSTEDSel.process.dat[,c(1,31:35)])
+
+#graphs of P values for BUSTED vs SRV
+```
+#TEST 1 data
+
+ Simulation of large.nex LF with the profile:  
+
+> {"sequences":29,
+"sites":995,
+"alpha rate count":3,
+"alpha distribution":{
+{0.1333333333333334,0.5}
+{0.6666666666666667,0.4}
+{6.666666666666668,0.09999999999999998}
+}
+,
+"omega rate count":3,
+"omega distribution":{
+{0.1,0.5}
+{0.5,0.25}
+{1,0.25}
+}
+}
+  
+ strict neutrality
+ high alpha 3
+ 
+```{r plots for test1 data}
+
+plot(test1.dat$BUSTED.P,test1.dat$BUSTED.SRV.P,ylim = c(0,1))
+abline(h=0.05,v=0.05, col = 'red')
+ggplot(test1.melt.dat, aes(variable,value))+geom_boxplot()+facet_grid(p.cat~p.srv.cat, scales = "free")+theme_bw()
+```
+
+#Test 2 simulation data
+simulation for high alpha 3 
+strict neutrality ( omega_3 = 1 all others <1)
+but this time with high proportion of alpha 3 sites (weigth Alpha 3 = 0.4)    
+
+Profile:  
+
+> {"sequences":29,
+"sites":995,
+"alpha rate count":3,
+"alpha distribution":{
+{0.04587155963302753,0.3}
+{0.2293577981651376,0.3}
+{2.293577981651376,0.4}
+}
+,
+"omega rate count":3,
+"omega distribution":{
+{0.1,0.5}
+{0.5,0.25}
+{1,0.25}
+}
+}
+
+
+```{r plots for test2 data}
+plot(test2.dat$BUSTED.P,test2.dat$BUSTED.SRV.P, xlim = c(0,0.053))
+abline(h=0.05,v=0.05, col = 'red')
+ggplot(test2.melt.dat, aes(variable,value))+geom_boxplot()+facet_grid(p.cat~p.srv.cat, scales = "free")+theme_bw()
+```
+
+#Test 3 simulation data
+simulation data with high alpha_3
+low proportion of alpha 3 ( weigth =2)
+strict neutrality   
+
+Profile:
+
+>{"sequences":29,
+"sites":995,
+"alpha rate count":3,
+"alpha distribution":{
+{0.3030303030303032,0.65}
+{1.515151515151516,0.33}
+{15.15151515151516,0.01999999999999997}
+}
+,
+"omega rate count":3,
+"omega distribution":{
+{0.1,0.5}
+{0.5,0.25}
+{1,0.25}
+}
+}
+
+```{r plots for test3 data}
+plot(test3.dat$BUSTED.P,test3.dat$BUSTED.SRV.P,xlim = c(0,0.053))
+abline(h=0.05,v=0.05, col = 'red')
+ggplot(test3.melt.dat, aes(variable,value))+geom_boxplot()+facet_grid(p.cat~p.srv.cat, scales = "free")+theme_bw()
+```
+
+#Simulation with max rates data
+Wanted to see what would happen if I maxed out all the rates  
+
+Profile: 
+
+>{"sequences":36,
+"sites":906,
+"alpha rate count":3,
+"alpha distribution":{
+{1,0}
+{1,0.5}
+{1,0.5}
+}
+,
+"omega rate count":3,
+"omega distribution":{
+{1,1}
+{0.6666666666666666,0}
+{1,0}
+}
+}
+
+
+```{r plots for max rates data}
+plot(max.dat$BUSTED.P,max.dat$BUSTED.SRV.P)
+abline(h=0.05,v=0.05, col = 'red')
+ggplot(max.melt.dat, aes(variable,value))+geom_boxplot()+facet_grid(p.cat~p.srv.cat, scales = "free")+theme_bw()
+
+```
+
+#simulation with minimum rate
+wanted to see what would happen with the opposite 
+```{r plots forminrates data}
+plot(min.dat$BUSTED.P,min.dat$BUSTED.SRV.P)
+abline(h=0.05,v=0.05, col = 'red')
+ggplot(min.melt.dat, aes(variable,value))+geom_boxplot()+facet_grid(p.cat~p.srv.cat, scales = "free")+theme_bw()
+
+```
+
+#Simulation using LF file from both selection category
+Simulated data from LF that was indicated as having evidence of postive selection in according to last analysis with BUSTED and BUSTED-SRV  
+
+Profile:
+
+>{"sequences":36,
+"sites":906,
+"alpha rate count":3,
+"alpha distribution":{
+{0.2105263157894738,0.5}
+{1.052631578947369,0.4}
+{4.736842105263158,0.09999999999999998}
+}
+,
+"omega rate count":3,
+"omega distribution":{
+{0.1,0.5}
+{0.5,0.25}
+{1,0.25}
+}
+}
+
+
+```{r plots for BothSel}
+plot(bothSel.dat$BUSTED.P,bothSel.dat$BUSTED.SRV.P)
+abline(h=0.05,v=0.05, col = 'red')
+ggplot(bothSel.melt.dat, aes(variable,value))+geom_boxplot()+facet_grid(p.cat~p.srv.cat, scales = "free")+theme_bw()
+```
+
+
+#BUSTED only Evidence
+
+Simulated data from LF that was indicated as having evidence of positive selection according to last analysis with BUSTED but no evidence of postive selection according to last analysis with  BUSTED-SRV  
+
+Profile:
+
+>{"sequences":31,
+"sites":869,
+"alpha rate count":3,
+"alpha distribution":{
+{0.1333333333333334,0.5}
+{0.6666666666666667,0.4}
+{6.666666666666668,0.09999999999999998}
+}
+,
+"omega rate count":3,
+"omega distribution":{
+{0.1,0.5}
+{0.5,0.25}
+{1,0.25}
+}
+}
+
+
+```{r plots for BUSTEDSel}
+plot(BUSTEDSel.dat$BUSTED.P,BUSTEDSel.dat$BUSTED.SRV.P)
+abline(h=0.05,v=0.05, col = 'red')
+ggplot(BUSTEDSel.melt.dat, aes(variable,value))+geom_boxplot()+facet_grid(p.cat~p.srv.cat, scales = "free")+theme_bw()
+```
+
